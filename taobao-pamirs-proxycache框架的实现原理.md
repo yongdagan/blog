@@ -1,3 +1,4 @@
+#taobao-pamirs-proxycache框架的实现原理
 [taobao-pamirs-proxycache](http://code.taobao.org/p/taobao-pamirs-proxycache/wiki/index/)是一个使缓存配置和业务代码分离的缓存管理框架。缓存代理通过XML配置，框架使用Spring AOP的方式与业务代码无缝结合。
 
 本文从下面几个方面介绍taobao-pamirs-proxycache框架的实现原理：
