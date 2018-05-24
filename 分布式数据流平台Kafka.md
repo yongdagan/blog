@@ -1,10 +1,6 @@
 # 分布式数据流平台Kafka
 
----
-
 Kafka是一个分布式的基于分区的消息系统，支持消息持久化，可轻松水平扩展以支持处理巨大的信息流，且系统保持较高的吞吐量。
-
----
 
 ### **Kafka基本概念**
 - **消息与批次**：Kafka的最小数据单元是消息，消息由字节数组组成，有一个可选的Key（供消息分区用）。批次就是一组消息，消息被分批次写入Kafka。
@@ -19,9 +15,6 @@ Kafka是一个分布式的基于分区的消息系统，支持消息持久化，
 - **Kafka服务器broker**：broker接收来自生产者的消息，为消息设置偏移量，并持久化消息。broker为消费者提供服务，对读取分区的请求作出响应，返回已经持久化的消息。
 - **Kafka集群**：一个集群有多个broker，其中一个broker同时充当集群控制器的角色。控制器由zookeeper选出，负责管理整个集群的broker，包括broker间的分区分配等工作。
 ![Kafka架构示意][2]
-<center>**Kafka架构示意图**</center>
-
----
 
 ### **Kafka生产者**
 
@@ -67,11 +60,8 @@ producer.send(new ProducerRecord<Integer, String>(topic, num, msg), new DemoProd
 
 #### **发送流程详解**
 ![Kafka消息发送流程][3]
-<center>**Kafka消息发送流程**</center>
 ![KafkaProducer][4]
-<center>**KafkaProducer**</center>
 ![KafkaProducerSender][5]
-<center>**Sender**</center>
 
 #### **生产者可靠性**
 
@@ -92,7 +82,6 @@ producer.send(new ProducerRecord<Integer, String>(topic, num, msg), new DemoProd
 
 
 ![Kafka消费者与群组协调者][6]
-<center>**Kafka消费者与群组协调者**</center>
 
 #### **基本配置参数**
 - bootstrap.servers: 指定broker的地址清单，地址的格式为host:port
@@ -135,7 +124,6 @@ try {
 
 #### **消费者轮询过程详解**
 ![KafkaConsumer.png-132.6kB][7]
-<center>**KafkaConsumer**</center>
 
 #### **提交偏移量**
 Kafka消费者通过维护分区偏移量来标识当前读取的消息在分区中的位置。偏移量的提交同样维护在Kafka消息队列中，消费者通过往_cusumer_offset主题发送偏移量消息，来维护每个分区的偏移量。
@@ -207,7 +195,6 @@ Kafka使用Topic组织数据，每个Topic被分为若干分区，每个分区�
 通过查看每个follower请求的最新偏移量，leader就会知道每个follower的复制进度，如果follower在10s（replica.lag.time.max.ms）内没有请求最新消息，那么它就会被认为是不同步的。一个不同步的副本是无法被选为leader的。由集群控制器来负责分区Leader选举。
 
 ![分区复制][8]
-<center>**分区复制**</center>
 
 #### **分区日志**
 Kafka的基本单元是分区。分区无法在多个broker间进行细分，也无法在同一个broker的多个磁盘上细分。
@@ -216,7 +203,6 @@ Kafka的基本单元是分区。分区无法在多个broker间进行细分，也
 
 Kafka为每个Topic设置数据保留期限，规定数据被删除前可以保留多长时间或清理数据前可以保留的数据量大小。当前正在写入数据的片段叫做活跃片段，活跃片段永远不会被删除。
 ![分区日志][9]
-<center>**分区日志**</center>
 
 #### **broker数据可靠性**
 - Kafka可以保证分区消息的顺序，即消息A先于B写入分区，消费者也会先读取到A。
@@ -250,12 +236,10 @@ Kafka的元信息非常重要，整个集群的运行都依赖metaData的更新�
 - /brokers/topics/topic1/partitions/0/state：topic1的分区0保存的各个副本
 
 ![Kafka集群元信息][10]
-<center>**Kafka集群元信息**</center>
 
 #### **控制器管理Kafka集群**
 
 ![Kafka控制器 (1).png-53.1kB][11]
-<center>**Kafka控制器**</center>
 
 ### **其他**
 
