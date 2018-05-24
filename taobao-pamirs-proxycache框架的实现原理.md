@@ -1,17 +1,18 @@
-#taobao-pamirs-proxycache框架的实现原理
+# taobao-pamirs-proxycache框架的实现原理
+
 [taobao-pamirs-proxycache](http://code.taobao.org/p/taobao-pamirs-proxycache/wiki/index/)是一个使缓存配置和业务代码分离的缓存管理框架。缓存代理通过XML配置，框架使用Spring AOP的方式与业务代码无缝结合。
 
 本文从下面几个方面介绍taobao-pamirs-proxycache框架的实现原理：
 >1. taobao-pamirs-proxycache的配置使用；
-2. 以CacheModule为代表的几个基本构件；
-3. CacheManager初始化缓存框架所涉及的工作；
-4. TairStore和MapStore的基本运行机制，其中会简要介绍Tair和ConcurrentLRUCacheMap的实现机制；
-5. CacheManagerHandle 缓存管理处理类如何使用AOP的方式进行缓存代理；
-6. ThreadCacheHandle 本地线程缓存机制。
+>2. 以CacheModule为代表的几个基本构件；
+>3. CacheManager初始化缓存框架所涉及的工作；
+>4. TairStore和MapStore的基本运行机制，其中会简要介绍Tair和ConcurrentLRUCacheMap的实现机制；
+>5. CacheManagerHandle 缓存管理处理类如何使用AOP的方式进行缓存代理；
+>6. ThreadCacheHandle 本地线程缓存机制。
 
 另外，本文以taobao-pamirs-proxycache 2.1.0后的版本作为例子，在配置上与之前的版本略有差别。
 
-###taobao-pamirs-proxycache 的配置使用
+### taobao-pamirs-proxycache 的配置使用
 **springCache.xml**：基本bean配置，其中tairManager是TairStore调用Tair的入口类，负责与Tair打交道，cacheManager是缓存框架的入口类，负责初始化缓存配置，cacheManagerHandle是缓存框架的处理类，负责依据cacheManager初始化的配置，采用AOP的方式管理缓存代理。
 ```xml
 <?xml version="1.0" encoding="GBK"?>
@@ -110,12 +111,12 @@
 	</cacheCleanBeans>
 </cacheModule>
 ```
-###以CacheModule为代表的几个基本构件
+### 以CacheModule为代表的几个基本构件
 ![配置相关的UML类图](http://upload-images.jianshu.io/upload_images/209608-f8c443d16b1c8212.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
 缓存框架根据XML文件可以很容易地得到对应的CacheModule，而实际使用的CacheConfig只是比CacheModule多了一些配置项参数。
 
-###CacheManager 初始化缓存框架
+### CacheManager 初始化缓存框架
 CacheManager是缓存框架的入口类，负责读取XML配置并初始化缓存框架。在这里，会借助ConfigUtil来做一些加载和校验的工作。具体来说，它要完成下面的工作：
 1. loadConfig()：加载并校验XML配置文件。利用XStream可以很方便地将正确配置的XML缓存配置文件转换为CacheModule的Java对象。将得到的CacheModule附上在springCache.xml的一些配置项就得到缓存的总配置CacheConfig。关键代码如下：
 ```java
@@ -152,7 +153,7 @@ if (cacheConfig.getCacheCleanBeans() != null) {
 
 至此，缓存框架初始化完成。从上面可以看出，缓存管理的基本元素是CacheProxy，而其内部功能实现就是TairStore或MapStore。因此，接下来简单介绍一下TairStore与MapStore及其相关的运行机制。
 
-###TairStore与Tair
+### TairStore与Tair
 TairStore采用淘宝Tair的统一缓存存储方案，通过Key/Value的形式将序列化后的对象存入Tair服务器。TairStore只支持put，put_expireTime，get，remove四种key方法，不能使用clear和clean这种范围清除操作。TairStore包装了Tair的Client接口TairManager的相应方法，并额外做一些格式转换和超时校验操作。缓存在Tair的唯一标识是namespace和key（region@beanName#methodName#{String|Long}abc@@123）。
 
 这里需要特别说明一下超时校验操作：
@@ -196,7 +197,7 @@ public V get(K key) {
 
 虽然TairStore只需与TairManager即Tair的client打交道，但理解上述知识对理解整个缓存框架有帮助。
 
-###MapStore与ConcurrentLRUCacheMap
+### MapStore与ConcurrentLRUCacheMap
 MapStore是使用本地ConcurrentLRUCacheMap缓存存储方案，其中采用线程安全的最近最少使用淘汰策略。MapStore支持get, put, remove, clear等key方法，但不支持invalidBefore失效缓存操作。MapStore的核心元素是ConcurrentLRUCacheMap，它提供线程安全的缓存存储结构。为了支持expiredTime，使用缓存结果包装类ObjectBoxing。MapStore的整体类结构如下：
 ![MapStore](http://upload-images.jianshu.io/upload_images/209608-9d71608f03452e3a.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -217,7 +218,7 @@ if (expireTime != null && expireTime != 0) {
 }
 ```
 
-###CacheManagerHandle 缓存管理处理类
+### CacheManagerHandle 缓存管理处理类
 首先给出框架生成代理及处理缓存时所涉及的UML类图，关键思想是利用Spring AOP机制来实现缓存代理。
 ![缓存代理及其处理的相关类](http://upload-images.jianshu.io/upload_images/209608-2db83a54b7e3c413.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
@@ -314,7 +315,7 @@ return invocation.proceed();
 
 这是因为CacheManagerHandle使用AOP创建缓存代理的最小粒度是bean，因此可以在bean的维度拦截整个bean的所有方法。而CacheManager初始化缓存框架的主要目的是初始化cacheProxys，用于后续与真正的缓存存储结构打交道。只有需要缓存的方法才需要cacheProxy，而缓存清理方法是不需要与缓存打交道的，但其中的cleanMethods必须存在缓存方法配置才可失效缓存。
 
-###ThreadCacheHandle 本地线程缓存
+### ThreadCacheHandle 本地线程缓存
 在流程中（单线程），涉及到对多个method的重复调用且调用结果相同时，即使单个接口性能很高，也可能导致整个流程性能降低。使用ThreadCacheHandle可以将method结果缓存起来，下次调用时直接在本线程的缓存中获取，不需要再次重复调用method。
 
 要使用ThreadCacheHandle需要做额外的XML配置，表明需要使用本地缓存服务的beans。配置方式如下所示：
